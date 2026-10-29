@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f8fc">
+  <title>Careflow — Hospital management</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17233c;
+      --muted: #78849b;
+      --line: #e9edf4;
+      --surface: #fff;
+      --canvas: #f6f8fc;
+      --blue: #4263eb;
+      --blue-dark: #3451cf;
+      --mint: #18a986;
+      --red: #e66767;
+      --shadow: 0 12px 35px rgba(34, 49, 83, .07);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--canvas); color: var(--ink); }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .hidden { display: none !important; }
+    .login-screen { min-height: 100vh; display: grid; grid-template-columns: 1.08fr .92fr; background: white; }
+    .login-art { padding: 54px 8vw; display: flex; flex-direction: column; justify-content: space-between; color: white; background: radial-gradient(ellipse at 82% 12%, rgba(116, 161, 255, .6), transparent 35%), linear-gradient(145deg, #263d96, #4167df 56%, #4f80e2); }
+    .brand { display: flex; align-items: center; gap: 11px; font-size: 19px; font-weight: 750; letter-spacing: -.5px; }
+    .brand-mark { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.18); font-size: 21px; }
+    .login-copy { max-width: 490px; }
+    .login-copy h1 { font-size: clamp(36px, 5vw, 58px); line-height: 1.08; letter-spacing: -2px; margin: 0 0 18px; }
+    .login-copy p { color: #dce5ff; font-size: 16px; line-height: 1.8; margin: 0; }
+    .login-foot { color: #dce5ff; font-size: 12px; }
+    .login-panel { display: grid; place-items: center; padding: 36px; }
+    .login-form { width: min(390px, 100%); }
+    .login-form h2 { font-size: 29px; letter-spacing: -.8px; margin: 0 0 8px; }
+    .login-form > p { color: var(--muted); font-size: 14px; margin: 0 0 30px; }
+    .field { display: grid; gap: 8px; margin-bottom: 17px; }
+    .field label { color: #4a5871; font-size: 12px; font-weight: 650; }
+    .field input, .field select, .field textarea, .search-input { width: 100%; border: 1px solid #e3e8f0; border-radius: 9px; background: white; color: var(--ink); padding: 11px 12px; outline: none; }
+    .field input:focus, .field select:focus, .field textarea:focus, .search-input:focus { border-color: #9aabfa; box-shadow: 0 0 0 3px rgba(66,99,235,.10); }
+    .field textarea { min-height: 76px; resize: vertical; }
+    .primary-btn { border: 0; border-radius: 9px; padding: 11px 16px; background: var(--blue); color: white; font-weight: 650; transition: background .15s, transform .15s; }
+    .primary-btn:hover { background: var(--blue-dark); transform: translateY(-1px); }
+    .login-form .primary-btn { width: 100%; padding: 13px; margin-top: 4px; }
+    .demo-note { margin-top: 19px; padding: 12px; border-radius: 9px; background: #f4f6fb; color: #66738b; font-size: 12px; line-height: 1.7; }
+    .login-error { min-height: 18px; color: #ca4e4e; font-size: 12px; margin: -5px 0 8px; }
+    .shell { display: flex; min-height: 100vh; }
+    .sidebar { width: 248px; flex: 0 0 248px; background: #fff; border-right: 1px solid var(--line); padding: 25px 15px 18px; display: flex; flex-direction: column; }
+    .sidebar .brand { padding: 0 10px 29px; color: var(--ink); }
+    .sidebar .brand-mark { color: var(--blue); background: #edf0ff; }
+    .nav-label { color: #a0a9ba; text-transform: uppercase; font-weight: 700; font-size: 10px; letter-spacing: 1px; padding: 0 12px; margin: 7px 0 10px; }
+    .nav-links { display: grid; gap: 4px; }
+    .nav-btn { display: flex; align-items: center; gap: 12px; width: 100%; border: 0; padding: 11px 12px; color: #68758d; background: transparent; border-radius: 9px; text-align: left; font-size: 13px; font-weight: 560; }
+    .nav-btn:hover { background: #f6f7fb; color: var(--ink); }
+    .nav-btn.active { color: var(--blue); background: #edf0ff; font-weight: 700; }
+    .nav-icon { width: 19px; text-align: center; font-size: 16px; }
+    .sidebar-bottom { margin-top: auto; }
+    .help-card { border-radius: 12px; padding: 14px; background: #f6f8fc; margin: 10px 2px 17px; }
+    .help-card strong { display: block; font-size: 12px; margin-bottom: 5px; }
+    .help-card span { font-size: 11px; color: var(--muted); line-height: 1.5; }
+    .user-box { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--line); padding: 16px 5px 0; }
+    .avatar { flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #e9edff; color: #425bd1; font-weight: 750; font-size: 12px; }
+    .user-meta { flex: 1; min-width: 0; }
+    .user-meta strong { display: block; font-size: 12px; }
+    .user-meta span { color: var(--muted); font-size: 10px; }
+    .logout-btn { border: 0; color: #8b95a9; background: transparent; font-size: 17px; }
+    .main { flex: 1; min-width: 0; }
+    .topbar { height: 75px; background: #fff; border-bottom: 1px solid var(--line); padding: 0 34px; display: flex; align-items: center; justify-content: space-between; }
+    .breadcrumbs { color: var(--muted); font-size: 12px; }
+    .breadcrumbs strong { color: var(--ink); font-weight: 650; }
+    .top-right { display: flex; align-items: center; gap: 18px; }
+    .today-label { color: #77839a; font-size: 12px; }
+    .top-avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: #e9edff; color: #425bd1; font-size: 11px; font-weight: 750; }
+    .content { max-width: 1500px; margin: 0 auto; padding: 32px 34px 42px; }
+    .page-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 26px; }
+    .page-heading h1 { font-size: 25px; letter-spacing: -.7px; margin: 0 0 6px; }
+    .page-heading p { color: var(--muted); font-size: 13px; margin: 0; }
+    .heading-actions { display: flex; gap: 9px; align-items: center; }
+    .ghost-btn { border: 1px solid var(--line); border-radius: 8px; color: #5f6b82; padding: 10px 13px; background: white; font-size: 12px; font-weight: 600; }
+    .stats-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 15px; margin-bottom: 24px; }
+    .stat-card, .panel, .table-panel { background: white; border: 1px solid #edf0f5; border-radius: 12px; box-shadow: var(--shadow); }
+    .stat-card { padding: 18px 17px 16px; min-height: 132px; }
+    .stat-top { display: flex; align-items: center; justify-content: space-between; color: #728098; font-size: 11px; font-weight: 580; }
+    .stat-icon { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 9px; font-size: 15px; }
+    .stat-icon.blue { background: #edf0ff; color: #5068df; }
+    .stat-icon.green { background: #e8f8f2; color: #139b77; }
+    .stat-icon.orange { background: #fff3e7; color: #db8b36; }
+    .stat-icon.purple { background: #f2ecff; color: #8864d8; }
+    .stat-number { font-size: 27px; font-weight: 750; letter-spacing: -.8px; margin: 13px 0 6px; }
+    .stat-foot { color: #a0a9b8; font-size: 10px; }
+    .stat-foot em { color: #169976; font-style: normal; font-weight: 650; }
+    .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(270px, .85fr); gap: 18px; }
+    .panel { padding: 19px; }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    .panel-head h2 { margin: 0; font-size: 14px; letter-spacing: -.2px; }
+    .panel-head p { color: var(--muted); font-size: 11px; margin: 5px 0 0; }
+    .text-btn { border: 0; background: none; color: var(--blue); font-size: 11px; font-weight: 650; padding: 5px; }
+    .appointment-list { display: grid; }
+    .appointment-row { display: grid; grid-template-columns: 54px minmax(130px,1fr) minmax(115px,.9fr) auto; gap: 12px; align-items: center; border-top: 1px solid #f0f2f6; padding: 13px 0; }
+    .appointment-row:first-child { border-top: 0; padding-top: 1px; }
+    .time-block { color: #435dd0; font-size: 11px; font-weight: 700; }
+    .person-cell strong, .doctor-cell strong { display: block; font-size: 11px; }
+    .person-cell span, .doctor-cell span { color: #929caf; font-size: 10px; display: block; margin-top: 3px; }
+    .status { display: inline-flex; align-items: center; border-radius: 30px; padding: 5px 8px; white-space: nowrap; font-size: 9px; font-weight: 700; }
+    .status.scheduled, .status.pending { color: #bb7b27; background: #fff4e5; }
+    .status.completed, .status.paid { color: #168464; background: #e8f7f1; }
+    .status.cancelled, .status.overdue { color: #c45858; background: #fff0ef; }
+    .status.in-progress { color: #5263c9; background: #edf0ff; }
+    .status.available, .status.vacant { color: #168464; background: #e8f7f1; }
+    .status.occupied, .status.assigned, .status.on-duty { color: #5263c9; background: #edf0ff; }
+    .status.maintenance, .status.off-duty, .status.on-leave { color: #c45858; background: #fff0ef; }
+    .schedule-list { display: grid; gap: 10px; }
+    .schedule-item { display: flex; gap: 10px; align-items: center; padding: 10px; border-radius: 9px; background: #fafbfe; }
+    .schedule-time { min-width: 46px; color: #5869d4; font-weight: 700; font-size: 10px; }
+    .schedule-info strong { display: block; font-size: 11px; }
+    .schedule-info span { display: block; color: #98a1b2; font-size: 10px; margin-top: 3px; }
+    .table-panel { overflow: hidden; }
+    .table-toolbar { padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); }
+    .table-toolbar h2 { font-size: 14px; margin: 0; }
+    .table-tools { display: flex; align-items: center; gap: 9px; }
+    .search-input { width: 210px; padding: 9px 11px; font-size: 11px; }
+    .table-wrap { width: 100%; overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; min-width: 650px; text-align: left; }
+    th { background: #fafbfc; color: #8994a8; font-size: 9px; text-transform: uppercase; letter-spacing: .55px; font-weight: 700; padding: 12px 17px; white-space: nowrap; }
+    td { padding: 13px 17px; border-top: 1px solid #f0f2f6; color: #5b6880; font-size: 11px; vertical-align: middle; }
+    td strong { color: var(--ink); font-size: 11px; font-weight: 650; }
+    .table-person { display: flex; align-items: center; gap: 9px; min-width: 140px; }
+    .table-person .avatar { width: 30px; height: 30px; font-size: 9px; }
+    .table-person strong { display: block; }
+    .table-person span { display: block; color: #9aa3b3; font-size: 10px; margin-top: 2px; }
+    .row-actions { display: flex; gap: 5px; white-space: nowrap; }
+    .icon-btn { border: 0; background: transparent; padding: 5px 7px; color: #8290a7; border-radius: 6px; font-size: 11px; }
+    .icon-btn:hover { background: #f0f3ff; color: var(--blue); }
+    .empty-state { text-align: center; color: #8994a8; padding: 38px 20px; font-size: 12px; }
+    .facility-section { margin-top: 21px; }
+    .facility-section > .panel-head { margin: 0 2px 12px; }
+    .facility-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .facility-panel { min-width: 0; padding: 0; }
+    .facility-panel .panel-head { margin: 0; padding: 16px 17px; }
+    .facility-panel .panel-head h2 { font-size: 13px; }
+    .facility-panel .panel-head p { font-size: 10px; }
+    .facility-panel .table-wrap { max-height: 270px; }
+    .facility-panel table { min-width: 490px; }
+    .facility-panel th, .facility-panel td { padding: 10px 13px; }
+    .facility-panel .empty-state { padding: 26px 12px; }
+    .ward-occupancy { display: grid; grid-template-columns: minmax(160px, .7fr) minmax(130px, 1fr); align-items: center; gap: 15px; padding: 10px 0; border-top: 1px solid #f0f2f6; }
+    .ward-occupancy:first-child { border-top: 0; padding-top: 0; }
+    .ward-summary strong { display: block; font-size: 11px; }
+    .ward-summary span { display: block; margin-top: 4px; color: #929caf; font-size: 10px; }
+    .occupancy-track { height: 7px; overflow: hidden; border-radius: 8px; background: #edf0f5; }
+    .occupancy-track span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #5775ed, #8b9cf4); }
+    .modal-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 18px; background: rgba(21, 31, 52, .38); }
+    .modal { width: min(560px, 100%); max-height: 92vh; overflow-y: auto; background: white; border-radius: 14px; box-shadow: 0 25px 80px rgba(21,31,52,.2); }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--line); }
+    .modal-head h2 { margin: 0; font-size: 16px; }
+    .modal-close { border: 0; background: none; color: #8390a6; font-size: 22px; }
+    .modal-form { padding: 20px 22px 22px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+    .form-grid .field.full { grid-column: 1/-1; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 9px; padding-top: 7px; }
+    .toast { position: fixed; bottom: 22px; left: 50%; z-index: 30; transform: translateX(-50%); background: #233252; color: white; border-radius: 9px; padding: 11px 17px; font-size: 12px; box-shadow: var(--shadow); }
+    @media (max-width: 1120px) {
+      .sidebar { width: 215px; flex-basis: 215px; }
+      .stats-grid { grid-template-columns: repeat(3, 1fr); }
+      .content { padding: 27px 24px; }
+      .topbar { padding: 0 24px; }
+    }
+    @media (max-width: 780px) {
+      .sidebar { width: 68px; flex-basis: 68px; padding: 20px 8px; }
+      .sidebar .brand { padding: 0 6px 25px; }
+      .sidebar .brand-name, .nav-label, .nav-text, .sidebar-bottom { display: none; }
+      .nav-btn { justify-content: center; padding: 12px 8px; }
+      .nav-icon { font-size: 18px; }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .facility-grid { grid-template-columns: 1fr; }
+      .topbar { height: 63px; padding: 0 17px; }
+      .content { padding: 23px 16px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .stat-card { min-height: 118px; padding: 14px; }
+      .appointment-row { grid-template-columns: 48px minmax(110px,1fr) auto; }
+      .appointment-row .doctor-cell { display: none; }
+      .today-label { display: none; }
+      .login-screen { grid-template-columns: 1fr; }
+      .login-art { display: none; }
+      .login-panel { min-height: 100vh; }
+    }
+    @media (max-width: 500px) {
+      .page-heading { align-items: flex-start; }
+      .page-heading h1 { font-size: 22px; }
+      .heading-actions .ghost-btn { display: none; }
+      .table-toolbar { align-items: flex-start; flex-direction: column; }
+      .table-tools, .search-input { width: 100%; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid .field.full { grid-column: auto; }
+      .stat-top { font-size: 10px; }
+      .stat-number { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <section class="login-screen" id="loginScreen">
+    <div class="login-art">
+      <div class="brand"><span class="brand-mark">✚</span><span>careflow</span></div>
+      <div class="login-copy">
+        <h1>Better care starts with a clearer picture.</h1>
+        <p>One calm, connected workspace for your patients, care team, appointments, and day-to-day operations.</p>
+      </div>
+      <div class="login-foot">A simpler way to care for your community.</div>
+    </div>
+    <div class="login-panel">
+      <form class="login-form" id="loginForm">
+        <h2>Welcome back</h2>
+        <p>Sign in to your hospital workspace.</p>
+        <div class="field"><label for="loginEmail">Work email</label><input id="loginEmail" type="email" autocomplete="username" required value="admin@careflow.com"></div>
+        <div class="field"><label for="loginPassword">Password</label><input id="loginPassword" type="password" autocomplete="current-password" required value="Careflow123!"></div>
+        <div class="login-error" id="loginError" role="alert"></div>
+        <button class="primary-btn" type="submit">Sign in to Careflow</button>
+        <div class="demo-note">Demo access<br><strong>admin@careflow.com</strong> &nbsp;·&nbsp; <strong>Careflow123!</strong><br><span style="display:block;margin-top:7px">Demo only: sign-in and browser storage are not secure for real patient data.</span></div>
+      </form>
+    </div>
+  </section>
+  <div class="shell hidden" id="appShell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">✚</span><span class="brand-name">careflow</span></div>
+      <div class="nav-label">Workspace</div>
+      <nav class="nav-links" id="navigation"></nav>
+      <div class="sidebar-bottom">
+        <div class="help-card"><strong>Need a hand?</strong><span>Your care team workspace, all in one place.</span></div>
+        <div class="user-box">
+          <div class="avatar">AD</div>
+          <div class="user-meta"><strong>Admin account</strong><span>Hospital administrator</span></div>
+          <button class="logout-btn" id="logoutBtn" title="Sign out" aria-label="Sign out">↪</button>
+        </div>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="breadcrumbs">Hospital workspace <span style="padding:0 7px;color:#c1c8d4">/</span> <strong id="crumb">Overview</strong></div>
+        <div class="top-right"><span class="today-label" id="todayLabel"></span><span class="top-avatar">AD</span></div>
+      </header>
+      <div class="content" id="pageContent"></div>
+    </main>
+  </div>
+  <div id="modalRoot"></div>
+  <div id="toastRoot"></div>
+  <script>
+    const navigation = [
+      { id: "dashboard", label: "Dashboard", icon: "⌂" },
+      { id: "patients", label: "Patients", icon: "♙" },
+      { id: "appointments", label: "Appointments", icon: "▦" },
+      { id: "doctors", label: "Doctors", icon: "⚕" },
+      { id: "prescriptions", label: "Prescriptions", icon: "▤" },
+      { id: "billing", label: "Billing & payments", icon: "＄" },
+      { id: "facilities", label: "Rooms & staff", icon: "▦" }
+    ];
+    function today() {
+      const date = new Date();
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    }
+    function dateOffset(days) {
+      const date = new Date();
+      date.setDate(date.getDate() + days);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    }
+    const initialData = {
+      patients: [
+        { id: "P-1001", name: "Olivia Bennett", age: 34, gender: "Female", phone: "+1 (555) 201-3480", email: "olivia.b@example.com", blood: "O+", joined: "2026-01-18" },
+        { id: "P-1002", name: "Ethan Brooks", age: 52, gender: "Male", phone: "+1 (555) 201-6721", email: "ethan.b@example.com", blood: "A+", joined: "2026-02-02" },
+        { id: "P-1003", name: "Sophia Chen", age: 27, gender: "Female", phone: "+1 (555) 201-4489", email: "sophia.c@example.com", blood: "B+", joined: "2026-03-12" },
+        { id: "P-1004", name: "Noah Williams", age: 46, gender: "Male", phone: "+1 (555) 201-9134", email: "noah.w@example.com", blood: "AB+", joined: "2026-04-04" },
+        { id: "P-1005", name: "Ava Patel", age: 39, gender: "Female", phone: "+1 (555) 201-7240", email: "ava.p@example.com", blood: "O-", joined: "2026-05-21" }
+      ],
+      doctors: [
+        { id: "D-201", name: "Dr. Amelia Carter", specialty: "Cardiology", phone: "+1 (555) 310-2001", email: "amelia.c@careflow.com", room: "Room 204", status: "Available" },
+        { id: "D-202", name: "Dr. Liam Foster", specialty: "General medicine", phone: "+1 (555) 310-2002", email: "liam.f@careflow.com", room: "Room 108", status: "Available" },
+        { id: "D-203", name: "Dr. Maya Thompson", specialty: "Pediatrics", phone: "+1 (555) 310-2003", email: "maya.t@careflow.com", room: "Room 312", status: "In consultation" },
+        { id: "D-204", name: "Dr. James Rivera", specialty: "Dermatology", phone: "+1 (555) 310-2004", email: "james.r@careflow.com", room: "Room 221", status: "Available" }
+      ],
+      appointments: [
+        { id: "A-3001", patient: "Olivia Bennett", doctor: "Dr. Amelia Carter", date: today(), time: "09:00", reason: "Cardiology follow-up", status: "Scheduled" },
+        { id: "A-3002", patient: "Ethan Brooks", doctor: "Dr. Liam Foster", date: today(), time: "09:30", reason: "Annual checkup", status: "Completed" },
+        { id: "A-3003", patient: "Sophia Chen", doctor: "Dr. Maya Thompson", date: today(), time: "10:00", reason: "Consultation", status: "In progress" },
+        { id: "A-3004", patient: "Noah Williams", doctor: "Dr. James Rivera", date: today(), time: "10:30", reason: "Skin review", status: "Scheduled" },
+        { id: "A-3005", patient: "Ava Patel", doctor: "Dr. Amelia Carter", date: today(), time: "11:00", reason: "ECG review", status: "Scheduled" },
+        { id: "A-3006", patient: "Olivia Bennett", doctor: "Dr. Liam Foster", date: dateOffset(1), time: "14:00", reason: "Medication review", status: "Scheduled" }
+      ],
+      prescriptions: [
+        { id: "RX-4001", patient: "Ethan Brooks", doctor: "Dr. Liam Foster", date: "2026-10-28", medication: "Vitamin D3", dosage: "1000 IU once daily", duration: "30 days", notes: "Take with food" },
+        { id: "RX-4002", patient: "Olivia Bennett", doctor: "Dr. Amelia Carter", date: "2026-10-27", medication: "Lisinopril", dosage: "10 mg once daily", duration: "90 days", notes: "Monitor blood pressure" },
+        { id: "RX-4003", patient: "Noah Williams", doctor: "Dr. James Rivera", date: "2026-10-24", medication: "Hydrocortisone cream", dosage: "Apply twice daily", duration: "7 days", notes: "For affected area" }
+      ],
+      billing: [
+        { id: "INV-5001", patient: "Olivia Bennett", date: "2026-10-28", description: "Cardiology consultation", amount: 180, status: "Pending", method: "—" },
+        { id: "INV-5002", patient: "Ethan Brooks", date: "2026-10-28", description: "General consultation", amount: 120, status: "Paid", method: "Card" },
+        { id: "INV-5003", patient: "Sophia Chen", date: "2026-10-28", description: "Pediatric consultation", amount: 150, status: "Pending", method: "—" },
+        { id: "INV-5004", patient: "Noah Williams", date: "2026-10-27", description: "Dermatology consultation", amount: 140, status: "Overdue", method: "—" },
+        { id: "INV-5005", patient: "Ava Patel", date: "2026-10-26", description: "ECG and consultation", amount: 225, status: "Paid", method: "Insurance" }
+      ],
+      rooms: [
+        { id: "RM-101", roomNumber: "101", type: "Private", ward: "General Ward", status: "Occupied", patient: "Olivia Bennett" },
+        { id: "RM-102", roomNumber: "102", type: "Private", ward: "General Ward", status: "Vacant", patient: "" },
+        { id: "RM-103", roomNumber: "103", type: "Shared", ward: "General Ward", status: "Occupied", patient: "Ethan Brooks" },
+        { id: "RM-201", roomNumber: "201", type: "ICU", ward: "Intensive Care", status: "Occupied", patient: "Sophia Chen" },
+        { id: "RM-202", roomNumber: "202", type: "ICU", ward: "Intensive Care", status: "Vacant", patient: "" },
+        { id: "RM-301", roomNumber: "301", type: "Maternity", ward: "Maternity Ward", status: "Vacant", patient: "" },
+        { id: "RM-302", roomNumber: "302", type: "Maternity", ward: "Maternity Ward", status: "Maintenance", patient: "" },
+        { id: "RM-401", roomNumber: "401", type: "Pediatric", ward: "Pediatrics", status: "Vacant", patient: "" }
+      ],
+      wards: [
+        { id: "W-01", name: "General Ward", floor: "1", beds: 24, occupied: 16 },
+        { id: "W-02", name: "Intensive Care", floor: "2", beds: 10, occupied: 8 },
+        { id: "W-03", name: "Maternity Ward", floor: "3", beds: 18, occupied: 11 },
+        { id: "W-04", name: "Pediatrics", floor: "4", beds: 20, occupied: 13 }
+      ],
+      nurses: [
+        { id: "N-301", name: "Grace Miller", department: "General Ward", shift: "Day", status: "Available" },
+        { id: "N-302", name: "Daniel Kim", department: "Intensive Care", shift: "Day", status: "On duty" },
+        { id: "N-303", name: "Isabella Reed", department: "Maternity Ward", shift: "Night", status: "Available" },
+        { id: "N-304", name: "Lucas Moore", department: "Pediatrics", shift: "Day", status: "Off duty" },
+        { id: "N-305", name: "Amara Johnson", department: "General Ward", shift: "Evening", status: "Available" }
+      ],
+      caretakers: [
+        { id: "C-401", name: "Mia Davis", department: "General Ward", shift: "Day", status: "Available" },
+        { id: "C-402", name: "Oliver Wilson", department: "Intensive Care", shift: "Day", status: "Assigned" },
+        { id: "C-403", name: "Zara Ahmed", department: "Maternity Ward", shift: "Evening", status: "Available" },
+        { id: "C-404", name: "Leo Garcia", department: "Pediatrics", shift: "Night", status: "Off duty" }
+      ]
+    };
+    const storageKey = "careflow-hospital-data-v1";
+    let data = loadData();
+    let activePage = "dashboard";
+    let searchTerm = "";
+
+    function loadData() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(storageKey));
+        if (stored && Array.isArray(stored.patients) && Array.isArray(stored.appointments) &&
+            Array.isArray(stored.doctors) && Array.isArray(stored.prescriptions) && Array.isArray(stored.billing)) {
+          const upgraded = { ...JSON.parse(JSON.stringify(initialData)), ...stored };
+          ["rooms", "wards", "nurses", "caretakers"].forEach(section => {
+            if (!Array.isArray(stored[section])) upgraded[section] = JSON.parse(JSON.stringify(initialData[section]));
+          });
+          return upgraded;
+        }
+        if (stored !== null) throw new Error("Saved hospital data is invalid.");
+      } catch (error) {
+        console.error("Could not load saved hospital data.", error);
+        showToast("Saved data could not be loaded. Starting with demo data.");
+      }
+      return JSON.parse(JSON.stringify(initialData));
+    }
+    function saveData() {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(data));
+      } catch (error) {
+        console.error("Could not save hospital data.", error);
+        showToast("Could not save changes in this browser.");
+      }
+    }
+    function formatDate(value) {
+      if (!value) return "—";
+      const date = new Date(value + "T12:00:00");
+      return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    }
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+    }
+    function initials(name) {
+      return String(name || "?").replace(/^Dr\.\s*/i, "").split(/\s+/).slice(0, 2).map(part => part[0] || "").join("").toUpperCase();
+    }
+    function showToast(message) {
+      const root = document.getElementById("toastRoot");
+      root.innerHTML = `<div class="toast" role="status">${esc(message)}</div>`;
+      window.setTimeout(() => { root.innerHTML = ""; }, 2800);
+    }
+    function boot() {
+      document.getElementById("todayLabel").textContent = new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+      document.getElementById("loginForm").addEventListener("submit", event => {
+        event.preventDefault();
+        const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+        const password = document.getElementById("loginPassword").value;
+        if (email !== "admin@careflow.com" || password !== "Careflow123!") {
+          document.getElementById("loginError").textContent = "That email and password don't match. Try the demo access below.";
+          return;
+        }
+        sessionStorage.setItem("careflow-session", "admin");
+        showApp();
+      });
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        sessionStorage.removeItem("careflow-session");
+        document.getElementById("appShell").classList.add("hidden");
+        document.getElementById("loginScreen").classList.remove("hidden");
+      });
+      document.getElementById("navigation").innerHTML = navigation.map(item =>
+        `<button class="nav-btn" data-page="${item.id}" aria-label="${item.label}"><span class="nav-icon">${item.icon}</span><span class="nav-text">${item.label}</span></button>`
+      ).join("");
+      document.getElementById("navigation").addEventListener("click", event => {
+        const button = event.target.closest("[data-page]");
+        if (button) { activePage = button.dataset.page; searchTerm = ""; render(); }
+      });
+      document.getElementById("loginScreen").classList.toggle("hidden", sessionStorage.getItem("careflow-session") === "admin");
+      if (sessionStorage.getItem("careflow-session") === "admin") showApp();
+    }
+    function showApp() {
+      document.getElementById("loginScreen").classList.add("hidden");
+      document.getElementById("appShell").classList.remove("hidden");
+      render();
+    }
+    function render() {
+      document.querySelectorAll(".nav-btn").forEach(button => button.classList.toggle("active", button.dataset.page === activePage));
+      const item = navigation.find(nav => nav.id === activePage);
+      document.getElementById("crumb").textContent = item ? item.label : "Overview";
+      if (activePage === "dashboard") renderDashboard();
+      else if (activePage === "facilities") renderFacilities();
+      else renderManagement(activePage);
+    }
+    function renderDashboard() {
+      const todays = data.appointments.filter(entry => entry.date === today());
+      const completed = data.appointments.filter(entry => entry.status === "Completed").length;
+      const pending = data.billing.filter(entry => entry.status !== "Paid").reduce((sum, entry) => sum + Number(entry.amount || 0), 0);
+      const availableRooms = data.rooms.filter(room => room.status === "Vacant").length;
+      const totalBeds = data.wards.reduce((sum, ward) => sum + Number(ward.beds || 0), 0);
+      const availableBeds = data.wards.reduce((sum, ward) => sum + Math.max(0, Number(ward.beds || 0) - Number(ward.occupied || 0)), 0);
+      const availableNurses = data.nurses.filter(nurse => nurse.status === "Available").length;
+      const availableCaretakers = data.caretakers.filter(caretaker => caretaker.status === "Available").length;
+      const metrics = [
+        ["Registered patients", data.patients.length, "♙", "blue", "Across all departments"],
+        ["Today's appointments", todays.length, "▦", "green", "Scheduled for today"],
+        ["Number of doctors", data.doctors.length, "⚕", "purple", "On your care team"],
+        ["Completed consultations", completed, "✓", "orange", "All recorded visits"],
+        ["Pending payments", "$" + pending.toLocaleString(), "＄", "blue", "Awaiting payment"]
+      ];
+      const appointments = todays.slice().sort((a, b) => a.time.localeCompare(b.time)).slice(0, 5);
+      const schedule = appointments.slice(0, 4);
+      document.getElementById("pageContent").innerHTML = `
+        <div class="page-heading"><div><h1>Good ${new Date().getHours() < 12 ? "morning" : "afternoon"}, Admin <span aria-hidden="true">✦</span></h1><p>Here's what's happening at your hospital today.</p></div><div class="heading-actions"><button class="ghost-btn" data-go="appointments">View schedule</button><button class="primary-btn" data-add="appointments">＋ New appointment</button></div></div>
+        <section class="stats-grid">${metrics.map(([label, value, icon, tone, foot]) => `<article class="stat-card"><div class="stat-top"><span>${label}</span><span class="stat-icon ${tone}">${icon}</span></div><div class="stat-number">${value}</div><div class="stat-foot"><em>●</em> &nbsp;${foot}</div></article>`).join("")}</section>
+        <section class="dashboard-grid">
+          <article class="panel"><div class="panel-head"><div><h2>Today's appointments</h2><p>${formatDate(today())} · ${todays.length} appointments</p></div><button class="text-btn" data-go="appointments">View all →</button></div>
+            <div class="appointment-list">${appointments.length ? appointments.map(appointment => `<div class="appointment-row"><div class="time-block">${esc(appointment.time)}</div><div class="person-cell"><strong>${esc(appointment.patient)}</strong><span>${esc(appointment.reason)}</span></div><div class="doctor-cell"><strong>${esc(appointment.doctor)}</strong><span>${esc(data.doctors.find(doctor => doctor.name === appointment.doctor)?.specialty || "Care team")}</span></div><span class="status ${statusClass(appointment.status)}">${esc(appointment.status)}</span></div>`).join("") : `<div class="empty-state">No appointments scheduled for today.</div>`}</div>
+          </article>
+          <article class="panel"><div class="panel-head"><div><h2>Up next</h2><p>Your next patient visits</p></div><span class="stat-icon blue">◷</span></div>
+            <div class="schedule-list">${schedule.length ? schedule.map(appointment => `<div class="schedule-item"><div class="schedule-time">${esc(appointment.time)}</div><div class="schedule-info"><strong>${esc(appointment.patient)}</strong><span>${esc(appointment.doctor)} · ${esc(appointment.reason)}</span></div></div>`).join("") : `<div class="empty-state">Your schedule is clear.</div>`}</div>
+          </article>
+        </section>`;
+      document.getElementById("pageContent").insertAdjacentHTML("beforeend", `
+        <section class="facility-section">
+          <div class="panel-head"><div><h2>Rooms, beds & care team</h2><p>Capacity and on-duty staff at a glance</p></div><button class="text-btn" data-go="facilities">Manage facilities →</button></div>
+          <div class="stats-grid">
+            <article class="stat-card"><div class="stat-top"><span>Rooms available</span><span class="stat-icon blue">▣</span></div><div class="stat-number">${availableRooms}<span style="font-size:13px;color:#8994a8;font-weight:550"> / ${data.rooms.length}</span></div><div class="stat-foot"><em>●</em> &nbsp;Vacant rooms</div></article>
+            <article class="stat-card"><div class="stat-top"><span>Wards</span><span class="stat-icon purple">▤</span></div><div class="stat-number">${data.wards.length}</div><div class="stat-foot"><em>●</em> &nbsp;${totalBeds} beds in total</div></article>
+            <article class="stat-card"><div class="stat-top"><span>Beds available</span><span class="stat-icon green">＋</span></div><div class="stat-number">${availableBeds}<span style="font-size:13px;color:#8994a8;font-weight:550"> / ${totalBeds}</span></div><div class="stat-foot"><em>●</em> &nbsp;Ready to accommodate</div></article>
+            <article class="stat-card"><div class="stat-top"><span>Nurses available</span><span class="stat-icon orange">♙</span></div><div class="stat-number">${availableNurses}<span style="font-size:13px;color:#8994a8;font-weight:550"> / ${data.nurses.length}</span></div><div class="stat-foot"><em>●</em> &nbsp;Available for assignment</div></article>
+            <article class="stat-card"><div class="stat-top"><span>Caretakers available</span><span class="stat-icon purple">♧</span></div><div class="stat-number">${availableCaretakers}<span style="font-size:13px;color:#8994a8;font-weight:550"> / ${data.caretakers.length}</span></div><div class="stat-foot"><em>●</em> &nbsp;Available for assignment</div></article>
+          </div>
+          <article class="panel"><div class="panel-head"><div><h2>Ward occupancy</h2><p>Current in-patient bed usage</p></div><button class="text-btn" data-go="facilities">View rooms & staff →</button></div>
+            <div class="schedule-list">${data.wards.length ? data.wards.map(ward => {
+              const beds = Number(ward.beds) || 0;
+              const occupied = Number(ward.occupied) || 0;
+              const percentage = beds ? Math.min(100, Math.round(occupied / beds * 100)) : 0;
+              return `<div class="ward-occupancy"><div class="ward-summary"><strong>${esc(ward.name)}</strong><span>${occupied} / ${beds} beds occupied · ${beds - occupied} available</span></div><div class="occupancy-track" role="progressbar" aria-label="${esc(ward.name)} occupancy" aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100"><span style="width:${percentage}%"></span></div></div>`;
+            }).join("") : `<div class="empty-state">Add a ward to track bed capacity.</div>`}</div>
+          </article>
+        </section>`);
+      document.getElementById("pageContent").onclick = event => {
+        const go = event.target.closest("[data-go]");
+        const add = event.target.closest("[data-add]");
+        if (go) { activePage = go.dataset.go; render(); }
+        if (add) openForm(add.dataset.add);
+      };
+    }
+    function statusClass(status) { return String(status || "").toLowerCase().replace(/\s+/g, "-"); }
+    const configurations = {
+      patients: {
+        title: "Patients", description: "Manage patient records and contact information.", add: "Add patient",
+        columns: ["Patient", "Patient ID", "Age / gender", "Phone", "Blood group", "Registered"],
+        fields: [["name", "Full name", "text", true], ["age", "Age", "number", true], ["gender", "Gender", "select", true, ["Female", "Male", "Other"]], ["phone", "Phone number", "tel", true], ["email", "Email address", "email", false], ["blood", "Blood group", "select", false, ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]]],
+        row: entry => [personCell(entry.name, entry.email), `<strong>${esc(entry.id)}</strong>`, `${esc(entry.age)} / ${esc(entry.gender)}`, esc(entry.phone), esc(entry.blood || "—"), formatDate(entry.joined)]
+      },
+      doctors: {
+        title: "Doctors", description: "Your medical team and their availability.", add: "Add doctor",
+        columns: ["Doctor", "Doctor ID", "Specialty", "Contact", "Room", "Availability"],
+        fields: [["name", "Doctor name", "text", true], ["specialty", "Specialty", "text", true], ["phone", "Phone number", "tel", true], ["email", "Email address", "email", true], ["room", "Room", "text", false], ["status", "Availability", "select", true, ["Available", "In consultation", "Off duty"]]],
+        row: entry => [personCell(entry.name, entry.email), `<strong>${esc(entry.id)}</strong>`, esc(entry.specialty), esc(entry.phone), esc(entry.room || "—"), `<span class="status ${statusClass(entry.status)}">${esc(entry.status)}</span>`]
+      },
+      appointments: {
+        title: "Appointments", description: "Schedule visits and follow the day's consultations.", add: "New appointment",
+        columns: ["Patient", "Doctor", "Date & time", "Reason", "Status"],
+        fields: [["patient", "Patient", "select", true, "patients"], ["doctor", "Doctor", "select", true, "doctors"], ["date", "Appointment date", "date", true], ["time", "Appointment time", "time", true], ["reason", "Reason for visit", "text", true], ["status", "Status", "select", true, ["Scheduled", "In progress", "Completed", "Cancelled"]]],
+        row: entry => [personCell(entry.patient), esc(entry.doctor), `${formatDate(entry.date)} · ${esc(entry.time)}`, esc(entry.reason), `<span class="status ${statusClass(entry.status)}">${esc(entry.status)}</span>`]
+      },
+      prescriptions: {
+        title: "Prescriptions", description: "Review and manage patient medication instructions.", add: "Add prescription",
+        columns: ["Prescription", "Patient", "Prescribing doctor", "Medication & dosage", "Date"],
+        fields: [["patient", "Patient", "select", true, "patients"], ["doctor", "Doctor", "select", true, "doctors"], ["medication", "Medication", "text", true], ["dosage", "Dosage instructions", "text", true], ["duration", "Duration", "text", true], ["date", "Issue date", "date", true], ["notes", "Notes", "textarea", false]],
+        row: entry => [`<strong>${esc(entry.id)}</strong>`, personCell(entry.patient), esc(entry.doctor), `<strong>${esc(entry.medication)}</strong><br><span style="font-size:10px;color:#929caf">${esc(entry.dosage)} · ${esc(entry.duration)}</span>`, formatDate(entry.date)]
+      },
+      billing: {
+        title: "Billing & payments", description: "Track invoices, balances, and patient payments.", add: "Create invoice",
+        columns: ["Invoice", "Patient", "Description", "Date", "Amount", "Payment status", "Method"],
+        fields: [["patient", "Patient", "select", true, "patients"], ["description", "Description", "text", true], ["date", "Invoice date", "date", true], ["amount", "Amount ($)", "number", true], ["status", "Payment status", "select", true, ["Pending", "Paid", "Overdue"]], ["method", "Payment method", "select", false, ["—", "Card", "Cash", "Insurance", "Bank transfer"]]],
+        row: entry => [`<strong>${esc(entry.id)}</strong>`, personCell(entry.patient), esc(entry.description), formatDate(entry.date), `<strong>$${Number(entry.amount).toLocaleString()}</strong>`, `<span class="status ${statusClass(entry.status)}">${esc(entry.status)}</span>`, esc(entry.method || "—")]
+      }
+    };
+    const facilityConfigurations = {
+      rooms: {
+        title: "Rooms", description: "Patient room occupancy and readiness.", add: "Add room",
+        columns: ["Room", "Type", "Ward", "Patient", "Status"],
+        fields: [["roomNumber", "Room number", "text", true], ["type", "Room type", "select", true, ["Private", "Shared", "ICU", "Maternity", "Pediatric"]], ["ward", "Ward", "select", true, "wards"], ["patient", "Assigned patient (optional)", "text", false], ["status", "Room status", "select", true, ["Vacant", "Occupied", "Maintenance"]]],
+        row: room => [`<strong>${esc(room.roomNumber)}</strong>`, esc(room.type), esc(room.ward), esc(room.patient || "—"), `<span class="status ${statusClass(room.status)}">${esc(room.status)}</span>`]
+      },
+      wards: {
+        title: "Wards", description: "Bed capacity and current occupancy.", add: "Add ward",
+        columns: ["Ward", "Floor", "Occupied beds", "Total beds", "Available beds"],
+        fields: [["name", "Ward name", "text", true], ["floor", "Floor", "text", true], ["beds", "Total beds", "number", true], ["occupied", "Occupied beds", "number", true]],
+        row: ward => [`<strong>${esc(ward.name)}</strong>`, esc(ward.floor), esc(ward.occupied), esc(ward.beds), `<span class="status ${Number(ward.occupied) < Number(ward.beds) ? "available" : "overdue"}">${Math.max(0, Number(ward.beds) - Number(ward.occupied))}</span>`]
+      },
+      nurses: {
+        title: "Nurses", description: "Nursing team availability and shift coverage.", add: "Add nurse",
+        columns: ["Nurse", "Department / ward", "Shift", "Availability"],
+        fields: [["name", "Nurse name", "text", true], ["department", "Department / ward", "text", true], ["shift", "Shift", "select", true, ["Day", "Evening", "Night"]], ["status", "Availability", "select", true, ["Available", "On duty", "Off duty", "On leave"]]],
+        row: nurse => [personCell(nurse.name, nurse.id), esc(nurse.department), esc(nurse.shift), `<span class="status ${statusClass(nurse.status)}">${esc(nurse.status)}</span>`]
+      },
+      caretakers: {
+        title: "Caretakers", description: "Patient support staff availability and assignments.", add: "Add caretaker",
+        columns: ["Caretaker", "Department / ward", "Shift", "Availability"],
+        fields: [["name", "Caretaker name", "text", true], ["department", "Department / ward", "text", true], ["shift", "Shift", "select", true, ["Day", "Evening", "Night"]], ["status", "Availability", "select", true, ["Available", "Assigned", "Off duty"]]],
+        row: caretaker => [personCell(caretaker.name, caretaker.id), esc(caretaker.department), esc(caretaker.shift), `<span class="status ${statusClass(caretaker.status)}">${esc(caretaker.status)}</span>`]
+      }
+    };
+    function renderFacilities() {
+      const availableRooms = data.rooms.filter(room => room.status === "Vacant").length;
+      const totalBeds = data.wards.reduce((sum, ward) => sum + Number(ward.beds || 0), 0);
+      const availableBeds = data.wards.reduce((sum, ward) => sum + Math.max(0, Number(ward.beds || 0) - Number(ward.occupied || 0)), 0);
+      const availableNurses = data.nurses.filter(nurse => nurse.status === "Available").length;
+      const availableCaretakers = data.caretakers.filter(caretaker => caretaker.status === "Available").length;
+      const stats = [
+        ["Rooms available", `${availableRooms} / ${data.rooms.length}`, "Vacant and ready", "blue"],
+        ["Wards", String(data.wards.length), `${totalBeds} beds in total`, "purple"],
+        ["Beds available", `${availableBeds} / ${totalBeds}`, "Ready to accommodate", "green"],
+        ["Nurses available", `${availableNurses} / ${data.nurses.length}`, "Available for assignment", "orange"],
+        ["Caretakers available", `${availableCaretakers} / ${data.caretakers.length}`, "Available for assignment", "purple"]
+      ];
+      const sections = Object.entries(facilityConfigurations).map(([section, config]) => {
+        const entries = data[section].filter(entry => !searchTerm || Object.values(entry).some(value => String(value).toLowerCase().includes(searchTerm.toLowerCase())));
+        return `<article class="table-panel facility-panel"><div class="panel-head"><div><h2>${config.title} <span style="color:#98a1b2;font-weight:450">(${data[section].length})</span></h2><p>${config.description}</p></div><button class="text-btn" data-add="${section}">＋ ${config.add}</button></div><div class="table-wrap"><table><thead><tr>${config.columns.map(column => `<th>${column}</th>`).join("")}<th>Actions</th></tr></thead><tbody>${entries.length ? entries.map(entry => `<tr data-id="${esc(entry.id)}" data-section="${section}">${config.row(entry).map(cell => `<td>${cell}</td>`).join("")}<td><div class="row-actions"><button class="icon-btn" data-action="edit" title="Edit ${esc(entry.id)}" aria-label="Edit ${esc(entry.id)}">✎</button><button class="icon-btn" data-action="delete" title="Delete ${esc(entry.id)}" aria-label="Delete ${esc(entry.id)}">✕</button></div></td></tr>`).join("") : `<tr><td class="empty-state" colspan="${config.columns.length + 1}">No ${config.title.toLowerCase()} found. Add a record to get started.</td></tr>`}</tbody></table></div></article>`;
+      }).join("");
+      document.getElementById("pageContent").innerHTML = `
+        <div class="page-heading"><div><h1>Rooms & staff</h1><p>Manage hospital capacity, ward occupancy, and care team availability.</p></div></div>
+        <section class="stats-grid">${stats.map(([label, value, foot, tone]) => `<article class="stat-card"><div class="stat-top"><span>${label}</span><span class="stat-icon ${tone}">✚</span></div><div class="stat-number">${value}</div><div class="stat-foot"><em>●</em> &nbsp;${foot}</div></article>`).join("")}</section>
+        <div class="table-toolbar" style="background:white;border:1px solid #edf0f5;border-radius:10px;margin-bottom:16px"><h2>Facility records</h2><div class="table-tools"><input class="search-input" id="facilitySearch" type="search" placeholder="Search rooms, wards & staff..." value="${esc(searchTerm)}" aria-label="Search facility records"></div></div>
+        <section class="facility-grid">${sections}</section>`;
+      const content = document.getElementById("pageContent");
+      content.onclick = event => {
+        const add = event.target.closest("[data-add]");
+        if (add) { openForm(add.dataset.add); return; }
+        const button = event.target.closest("[data-action]");
+        if (!button) return;
+        const row = button.closest("tr");
+        if (!row) return;
+        const section = row.dataset.section;
+        const entry = data[section].find(record => record.id === row.dataset.id);
+        if (!entry) return;
+        if (button.dataset.action === "edit") { openForm(section, entry); return; }
+        if (button.dataset.action === "delete" && section === "wards" && data.wards.length === 1) {
+          showToast("At least one ward is required to manage rooms.");
+          return;
+        }
+        if (button.dataset.action === "delete" && section === "wards" && data.rooms.some(room => room.ward === entry.name)) {
+          showToast("Move or reassign this ward's rooms before deleting it.");
+          return;
+        }
+        if (button.dataset.action === "delete" && window.confirm(`Delete ${entry.id}? This cannot be undone.`)) {
+          data[section] = data[section].filter(record => record.id !== entry.id);
+          saveData(); render(); showToast("Record deleted.");
+        }
+      };
+      document.getElementById("facilitySearch").addEventListener("input", event => {
+        searchTerm = event.target.value;
+        const position = event.target.selectionStart;
+        renderFacilities();
+        const input = document.getElementById("facilitySearch");
+        input.focus();
+        input.setSelectionRange(position, position);
+      });
+    }
+    function personCell(name, subtitle) {
+      return `<div class="table-person"><span class="avatar">${esc(initials(name))}</span><span><strong>${esc(name)}</strong>${subtitle ? `<span>${esc(subtitle)}</span>` : ""}</span></div>`;
+    }
+    function renderManagement(section) {
+      const config = configurations[section];
+      const entries = data[section].filter(entry => !searchTerm || Object.values(entry).some(value => String(value).toLowerCase().includes(searchTerm.toLowerCase())));
+      document.getElementById("pageContent").innerHTML = `
+        <div class="page-heading"><div><h1>${config.title}</h1><p>${config.description}</p></div><div class="heading-actions"><button class="primary-btn" data-add="${section}">＋ ${config.add}</button></div></div>
+        <section class="table-panel"><div class="table-toolbar"><h2>${config.title} <span style="color:#98a1b2;font-weight:450">(${data[section].length})</span></h2><div class="table-tools"><input class="search-input" id="tableSearch" type="search" placeholder="Search ${config.title.toLowerCase()}..." value="${esc(searchTerm)}" aria-label="Search ${config.title}"></div></div>
+        <div class="table-wrap"><table><thead><tr>${config.columns.map(column => `<th>${column}</th>`).join("")}<th>Actions</th></tr></thead><tbody>${entries.length ? entries.map(entry => `<tr data-id="${esc(entry.id)}">${config.row(entry).map(cell => `<td>${cell}</td>`).join("")}<td><div class="row-actions"><button class="icon-btn" data-action="edit" title="Edit" aria-label="Edit ${esc(entry.id)}">✎</button>${section === "billing" && entry.status !== "Paid" ? `<button class="icon-btn" data-action="pay" title="Mark paid">✓ Pay</button>` : ""}<button class="icon-btn" data-action="delete" title="Delete" aria-label="Delete ${esc(entry.id)}">✕</button></div></td></tr>`).join("") : `<tr><td class="empty-state" colspan="${config.columns.length + 1}">No ${section} found. Add a record to get started.</td></tr>`}</tbody></table></div></section>`;
+      const content = document.getElementById("pageContent");
+      content.onclick = event => {
+        const add = event.target.closest("[data-add]");
+        if (add) { openForm(section); return; }
+        const button = event.target.closest("[data-action]");
+        if (!button) return;
+        const row = button.closest("tr");
+        if (!row) return;
+        const entry = data[section].find(record => record.id === row.dataset.id);
+        if (!entry) return;
+        if (button.dataset.action === "edit") openForm(section, entry);
+        if (button.dataset.action === "pay") {
+          entry.status = "Paid";
+          entry.method = entry.method === "—" ? "Card" : entry.method;
+          saveData(); render(); showToast("Payment marked as paid.");
+        }
+        if (button.dataset.action === "delete" && window.confirm(`Delete ${entry.id}? This cannot be undone.`)) {
+          data[section] = data[section].filter(record => record.id !== entry.id);
+          saveData(); render(); showToast("Record deleted.");
+        }
+      };
+      document.getElementById("tableSearch").addEventListener("input", event => {
+        searchTerm = event.target.value;
+        const position = event.target.selectionStart;
+        renderManagement(section);
+        const input = document.getElementById("tableSearch");
+        input.focus();
+        input.setSelectionRange(position, position);
+      });
+    }
+    function nextId(section) {
+      const prefixes = { patients: "P", doctors: "D", appointments: "A", prescriptions: "RX", billing: "INV", rooms: "RM", wards: "W", nurses: "N", caretakers: "C" };
+      const base = { patients: 1000, doctors: 200, appointments: 3000, prescriptions: 4000, billing: 5000, rooms: 100, wards: 0, nurses: 300, caretakers: 400 }[section];
+      const highest = data[section].reduce((max, entry) => {
+        const match = String(entry.id).match(/(\d+)$/);
+        return match ? Math.max(max, Number(match[1])) : max;
+      }, base);
+      const number = highest + 1;
+      return `${prefixes[section]}-${number}`;
+    }
+    function openForm(section, existing) {
+      const config = configurations[section] || facilityConfigurations[section];
+      const fields = config.fields.map(([name, label, type, required, options]) => {
+        const statusDefault = section === "appointments" ? "Scheduled" : section === "billing" ? "Pending" : section === "rooms" ? "Vacant" : "Available";
+        const value = existing?.[name] ?? (name === "date" ? today() : name === "status" ? statusDefault : name === "occupied" ? 0 : "");
+        const full = type === "textarea" ? " full" : "";
+        let control;
+        if (type === "select") {
+          const choices = Array.isArray(options) ? options : data[options].map(item => item.name);
+          control = `<select id="form-${name}" name="${name}" ${required ? "required" : ""}>${choices.map(choice => `<option value="${esc(choice)}" ${choice === value ? "selected" : ""}>${esc(choice)}</option>`).join("")}</select>`;
+        } else if (type === "textarea") {
+          control = `<textarea id="form-${name}" name="${name}" ${required ? "required" : ""}>${esc(value)}</textarea>`;
+        } else {
+          const numberConstraints = type === "number" ? `min="${name === "beds" ? "1" : "0"}" step="1"` : "";
+          control = `<input id="form-${name}" name="${name}" type="${type}" value="${esc(value)}" ${required ? "required" : ""} ${numberConstraints}>`;
+        }
+        return `<div class="field${full}"><label for="form-${name}">${label}${required ? " *" : ""}</label>${control}</div>`;
+      }).join("");
+      document.getElementById("modalRoot").innerHTML = `<div class="modal-backdrop" id="modalBackdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-head"><h2 id="modalTitle">${existing ? "Edit" : "Add"} ${config.title.replace(/s$/, "")}</h2><button class="modal-close" type="button" aria-label="Close dialog">×</button></div><form class="modal-form" id="recordForm"><div class="form-grid">${fields}</div><div class="modal-actions"><button class="ghost-btn modal-cancel" type="button">Cancel</button><button class="primary-btn" type="submit">${existing ? "Save changes" : "Save record"}</button></div></form></section></div>`;
+      const close = () => { document.getElementById("modalRoot").innerHTML = ""; };
+      document.querySelector(".modal-close").addEventListener("click", close);
+      document.querySelector(".modal-cancel").addEventListener("click", close);
+      document.getElementById("modalBackdrop").addEventListener("click", event => { if (event.target.id === "modalBackdrop") close(); });
+      document.getElementById("recordForm").addEventListener("submit", event => {
+        event.preventDefault();
+        const values = Object.fromEntries(new FormData(event.currentTarget).entries());
+        if (section === "wards") {
+          values.beds = Number(values.beds);
+          values.occupied = Number(values.occupied);
+          if (values.occupied > values.beds) {
+            document.getElementById("form-occupied").setCustomValidity("Occupied beds cannot exceed total beds.");
+            document.getElementById("form-occupied").reportValidity();
+            ["beds", "occupied"].forEach(name => document.getElementById(`form-${name}`).addEventListener("input", () => {
+              const beds = Number(document.getElementById("form-beds").value);
+              const occupied = Number(document.getElementById("form-occupied").value);
+              document.getElementById("form-occupied").setCustomValidity(occupied > beds ? "Occupied beds cannot exceed total beds." : "");
+            }));
+            return;
+          }
+        }
+        if (section === "rooms" && values.status !== "Occupied") values.patient = "";
+        if (section === "patients" && !existing) {
+          values.id = nextId(section);
+          values.joined = today();
+        } else if (section === "billing") {
+          values.amount = Number(values.amount);
+          values.method = values.method || "—";
+        }
+        if (!existing) values.id = nextId(section);
+        if (existing) {
+          const previousName = existing.name;
+          Object.assign(existing, values);
+          if (section === "wards" && previousName !== values.name) {
+            data.rooms.forEach(room => { if (room.ward === previousName) room.ward = values.name; });
+          }
+        }
+        else data[section].unshift(values);
+        saveData(); close(); render(); showToast(existing ? "Changes saved." : "Record added.");
+      });
+      const firstInput = document.querySelector("#recordForm input, #recordForm select, #recordForm textarea");
+      if (firstInput) firstInput.focus();
+    }
+    boot();
+  </script>
+</body>
+</html>
