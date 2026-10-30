@@ -80,7 +80,9 @@ function App() {
     setLoading(true)
     setError('')
     try {
-      const response = await fetch('/api/analyze', {
+      const response = await fetch(
+  'https://career-lens-backend-qpk2.onrender.com/api/analyze',
+  {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeText: text, targetRole: targetRole.trim() }),
